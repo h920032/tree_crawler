@@ -22,4 +22,4 @@ python3 tree_crawler
 |Undergraduate|National Taiwan University (NTU)|
 |Department|Information Management (Major)|
 ||Forest and Environment Resources Conservation (Double Major)|
-|Email|h920032@gmail.com|
+|Email|h920032@yahoo.com.tw|
