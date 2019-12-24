@@ -111,8 +111,9 @@ for i in range(start,df_tree_index['詳看內容'].size):
         url = [a.get('href') for a in tr.find_all('a')] #獨立出網址
         temp.append(url[0])
         rows.append(temp)
-    rows = np.array(rows)
-    rows = np.delete(rows, [4], axis=1)
+    if rows:
+        rows = np.array(rows)
+        rows = np.delete(rows, [4], axis=1)
     columns = [th.text.replace('\n', '') for th in table.find('tr').find_all('th')]
     df_treat_index = pd.DataFrame(data=rows,columns=columns)
     df_treat_index.to_excel(file_path + "/健康檢查.xlsx", sheet_name='tree_index',index=False)
@@ -129,8 +130,9 @@ for i in range(start,df_tree_index['詳看內容'].size):
         url = [a.get('href') for a in tr.find_all('a')] #獨立出網址
         temp.append(url[0])
         rows.append(temp)
-    rows = np.array(rows)
-    rows = np.delete(rows, [3], axis=1)
+    if rows:
+        rows = np.array(rows)
+        rows = np.delete(rows, [3], axis=1)
     columns = [th.text.replace('\n', '') for th in table.find('tr').find_all('th')]
     df_case_index = pd.DataFrame(data=rows,columns=columns)
     df_case_index.to_excel(file_path + "/診治紀錄.xlsx", sheet_name='tree_index',index=False)
