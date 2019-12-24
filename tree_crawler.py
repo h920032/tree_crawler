@@ -9,13 +9,21 @@ import pandas as pd
 import numpy as np
 import os
 import requests
+import re
+from progress.bar import Bar
+from progress.bar import ChargingBar
+
+start = 0
+print("輸入抓取起始編號：")
+start = int(input()) - 1
 
 chromedriver = "./chromedriver"
 driver = webdriver.Chrome(chromedriver)
 
 #起始網址
 tree_list_url = 'http://oldtree.tainan.gov.tw/tree0.asp'
-
+print("起始網址：" + tree_list_url)
+print("存放位置：" + os.getcwd() + "/tree_data")
 #開啟chrome driver
 driver.get(tree_list_url)
 
@@ -27,6 +35,7 @@ path = "./tree_data" #建立資料夾
 if not os.path.isdir(path):
     os.mkdir(path)
 rows = list()
+bar = ChargingBar('抓取樹木清單', max=length, suffix='%(percent)d%%')
 for i in range(1,length):
     s1 = Select(driver.find_element_by_name('menu'))
     s1.select_by_index(i)
@@ -39,15 +48,18 @@ for i in range(1,length):
         url = [a.get('href') for a in tr.find_all('a')] #獨立出網址
         temp.append(url[0])
         rows.append(temp)
+    bar.next()
 rows = np.array(rows)
 rows = np.delete(rows, [3], axis=1)
 columns = [th.text.replace('\n', '') for th in table.find('tr').find_all('th')]
 df_tree_index = pd.DataFrame(data=rows,columns=columns)
 df_tree_index.to_excel(path + "/樹木清單.xlsx", sheet_name='tree_index',index=False)
+bar.next()
+bar.finish()
+print("==========樹木清單抓取完成==========")
 
-
-for i in range(df_tree_index['詳看內容'].size):
-    print("===================" + df_tree_index['編號'].values[i] + "======================")
+for i in range(start,df_tree_index['詳看內容'].size):
+    print("==========正在抓取樹木編號：" + df_tree_index['編號'].values[i] + "==========")
     single = 'http://oldtree.tainan.gov.tw/' + df_tree_index['詳看內容'].values[i]
     driver.get(single)
     
@@ -76,13 +88,18 @@ for i in range(df_tree_index['詳看內容'].size):
     img_path = file_path + '/treeimgs'
     if not os.path.isdir(img_path):
         os.mkdir(img_path)
+    bar = ChargingBar('下載圖片', max=len(jpg_list), suffix='%(percent)d%%')
     for a in jpg_list:
         url = 'http://oldtree.tainan.gov.tw/' + a
         r = requests.get(url)
         with open(file_path + '/' + a,'wb') as f:
         #將圖片下載下來
             f.write(r.content)
+        bar.next()
+    bar.finish()
+    #print("==========圖片下載完成==========")
     
+    bar = ChargingBar('抓取詳細資料網址', max=2, suffix='%(percent)d%%')
     table1_url = 'http://oldtree.tainan.gov.tw/' + 'tree02.asp?' + df_tree_index['詳看內容'].values[i].split('?',1)[1]
     driver.get(table1_url)
     rows = list()
@@ -99,6 +116,7 @@ for i in range(df_tree_index['詳看內容'].size):
     columns = [th.text.replace('\n', '') for th in table.find('tr').find_all('th')]
     df_treat_index = pd.DataFrame(data=rows,columns=columns)
     df_treat_index.to_excel(file_path + "/健康檢查.xlsx", sheet_name='tree_index',index=False)
+    bar.next()
     
     table2_url = 'http://oldtree.tainan.gov.tw/' + 'tree03.asp?' + df_tree_index['詳看內容'].values[i].split('?',1)[1]
     driver.get(table2_url)
@@ -116,9 +134,11 @@ for i in range(df_tree_index['詳看內容'].size):
     columns = [th.text.replace('\n', '') for th in table.find('tr').find_all('th')]
     df_case_index = pd.DataFrame(data=rows,columns=columns)
     df_case_index.to_excel(file_path + "/診治紀錄.xlsx", sheet_name='tree_index',index=False)
+    bar.next()
+    bar.finish()
     
     #============================抓取健康檢查內容=====================================
-
+    bar = ChargingBar('抓取健康檢查內容', max=df_treat_index['詳看內容'].size, suffix='%(percent)d%%')
     for j in range(df_treat_index['詳看內容'].size):
         treat_path = file_path + '/健康檢查'
         if not os.path.isdir(treat_path):
@@ -137,7 +157,7 @@ for i in range(df_tree_index['詳看內容'].size):
         table = soup.find('table',{'cellspacing': '5'})
         data = table.find_all('td',{'colspan': '2'})
         #print(table.text.replace('\t', '').replace('\xa0', ''))
-        info = ("0,1\n" + table.text.replace('\t', '').replace(',', '\n').replace(' ', '').replace('\xa0', '').split("樹木基本狀況樹木健康狀況",1)[0].replace('：', ',')).replace('\n\n', '\n')
+        info = ("0,1\n" + table.text.replace('\t', '').replace(',', '\n').replace('其他','\n其他').replace(' ', '').replace('\xa0', '').split("樹木基本狀況樹木健康狀況",1)[0].replace('：', ',')).replace('\n\n', '\n')
 
         with open(treat_date_path + "/" + "temp.csv", "w") as f:
             f.write(info)
@@ -196,10 +216,13 @@ for i in range(df_tree_index['詳看內容'].size):
                 with open(treat_date_path + '/' + i.split('/',1)[1],'wb') as f:
                     #將圖片下載下來
                     f.write(r.content)
-        print(df_treat_index['健檢日期'].values[j].replace('/', '-'))
+        #print(df_treat_index['健檢日期'].values[j].replace('/', '-'))
+        bar.next()
+    bar.finish()
+    #print("==========健康檢查內容抓取完成==========")
         
     #================================抓取診治紀錄內容========================================
-    
+    bar = ChargingBar('抓取診治紀錄內容', max=df_case_index['詳看內容'].size, suffix='%(percent)d%%')
     for j in range(df_case_index['詳看內容'].size):
 
         case_path = file_path + '/診治紀錄'
@@ -239,4 +262,6 @@ for i in range(df_tree_index['詳看內容'].size):
                 with open(case_date_path + '/' + i.split('/',1)[1],'wb') as f:
                     #將圖片下載下來
                     f.write(r.content)
-        print(df_case_index['診治日期'].values[j].replace('/', '-'))
+        #print(df_case_index['診治日期'].values[j].replace('/', '-'))
+        bar.next()
+    bar.finish()
