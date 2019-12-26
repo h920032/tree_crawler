@@ -4,6 +4,7 @@
 git clone https://github.com/h920032/tree_crawler.git
 ```
 ### Excute Enviornment
+* **OSn**：macOS、Ubuntu
 * **Python Version**：python 3
 * **Module**：pandas、numpy、os、xlrd、selenium、requests
 * **Necessary File**：chromedriver、tree_crawler.py
@@ -11,6 +12,7 @@ chrome driver download (do not use the lastest version)：
 https://chromedriver.storage.googleapis.com/index.html?path=79.0.3945.36/
 * **Browser**：Google Chrome
 https://www.google.com/chrome/
+* **Note**：Use file in windows dir to run on windows
 
 ### Run
 ```
