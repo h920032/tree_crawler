@@ -17,7 +17,7 @@ start = 0
 print("輸入抓取起始編號：")
 start = int(input()) - 1
 
-driver = webdriver.PhantomJS()
+driver = webdriver.PhantomJS(executable_path='./phantomjs-2.1.1-linux-x86_64/bin/phantomjs')
 
 #起始網址
 tree_list_url = 'http://oldtree.tainan.gov.tw/tree0.asp'
